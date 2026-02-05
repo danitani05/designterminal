@@ -2,54 +2,125 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
-st.set_page_config(layout="wide")
-st.title("Design Configurator")
+# =========================================================
+# PAGE CONFIG
+# =========================================================
+st.set_page_config(
+    page_title="Terminal Design Tool",
+    layout="wide"
+)
 
+st.title("🚢 Terminal Design Configurator")
+
+# =========================================================
+# LAYOUT: LEFT (INPUT) | RIGHT (DESIGN)
+# =========================================================
 col_input, col_view = st.columns([1, 2])
 
-# =========================
-# PANEL INPUT (KIRI)
-# =========================
+# =========================================================
+# LEFT PANEL - INPUT PARAMETER
+# =========================================================
 with col_input:
-    st.header("Parameter Desain")
+    st.subheader("Parameter Desain")
 
-    panjang = st.slider("Panjang (m)", 50, 500, 200)
-    lebar = st.slider("Lebar (m)", 30, 300, 100)
-    tinggi = st.slider("Tinggi (m)", 5, 50, 20)
+    layout_type = st.selectbox(
+        "Tipe Layout",
+        ["Lapangan Penumpukan", "Dermaga", "Gudang"]
+    )
 
-    mode = st.radio("Mode Tampilan", ["2D", "3D"])
+    panjang = st.slider("Panjang Area (meter)", 50, 500, 200)
+    lebar = st.slider("Lebar Area (meter)", 30, 300, 100)
+    tinggi = st.slider("Tinggi / Elevasi (meter)", 5, 50, 20)
 
-# =========================
-# PANEL DESAIN (KANAN)
-# =========================
+    jumlah_blok = st.number_input(
+        "Jumlah Blok",
+        min_value=1,
+        max_value=10,
+        value=4
+    )
+
+    mode_view = st.radio(
+        "Mode Tampilan",
+        ["2D Plan", "3D Model"]
+    )
+
+# =========================================================
+# RIGHT PANEL - DESIGN VIEW
+# =========================================================
 with col_view:
-    st.header("Preview Desain")
+    st.subheader("Preview Desain")
 
-    if mode == "2D":
-        fig, ax = plt.subplots(figsize=(8,5))
+    # =========================
+    # 2D MODE
+    # =========================
+    if mode_view == "2D Plan":
+        fig, ax = plt.subplots(figsize=(9, 6))
+
+        # Main Area
         ax.add_patch(
-            plt.Rectangle((0,0), panjang, lebar, color="#4CAF50", alpha=0.6)
+            plt.Rectangle(
+                (0, 0),
+                panjang,
+                lebar,
+                color="#4CAF50",
+                alpha=0.6
+            )
         )
+
+        # Block division
+        jarak = panjang / jumlah_blok
+        for i in range(1, jumlah_blok):
+            ax.plot(
+                [i * jarak, i * jarak],
+                [0, lebar],
+                linestyle="--",
+                color="black",
+                linewidth=1
+            )
+
         ax.set_xlim(0, panjang)
         ax.set_ylim(0, lebar)
         ax.set_aspect("equal")
+        ax.set_title(f"2D Layout - {layout_type}")
         ax.axis("off")
+
         st.pyplot(fig)
 
-    if mode == "3D":
-        fig = go.Figure(data=[
-            go.Mesh3d(
-                x=[0, panjang, panjang, 0, 0, panjang, panjang, 0],
-                y=[0, 0, lebar, lebar, 0, 0, lebar, lebar],
-                z=[0, 0, 0, 0, tinggi, tinggi, tinggi, tinggi],
-                opacity=0.6
-            )
-        ])
+    # =========================
+    # 3D MODE
+    # =========================
+    if mode_view == "3D Model":
+        x = [0, panjang, panjang, 0, 0, panjang, panjang, 0]
+        y = [0, 0, lebar, lebar, 0, 0, lebar, lebar]
+        z = [0, 0, 0, 0, tinggi, tinggi, tinggi, tinggi]
+
+        fig = go.Figure(
+            data=[
+                go.Mesh3d(
+                    x=x,
+                    y=y,
+                    z=z,
+                    color="green",
+                    opacity=0.6
+                )
+            ]
+        )
 
         fig.update_layout(
-            margin=dict(l=0, r=0, t=0, b=0),
-            scene=dict(aspectmode="data")
+            scene=dict(
+                xaxis_title="Panjang",
+                yaxis_title="Lebar",
+                zaxis_title="Tinggi",
+                aspectmode="data"
+            ),
+            margin=dict(l=0, r=0, t=30, b=0),
+            title=f"3D Model - {layout_type}"
         )
 
         st.plotly_chart(fig, use_container_width=True)
 
+# =========================================================
+# FOOTER
+# =========================================================
+st.markdown("---")
+st.caption("Design Terminal Tool | Streamlit Cloud")
