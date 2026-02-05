@@ -1,2 +1,2 @@
-# designterminal
+# Design Terminal
 Membuat Design terminal
